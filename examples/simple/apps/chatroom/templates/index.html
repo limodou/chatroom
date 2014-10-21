@@ -26,8 +26,10 @@ socket.on('announcement', function (msg) {
 
 socket.on('nicknames', function (nicknames) {
     $('#nicknames').empty().append($('<span>Online: </span>'));
+    $("#user-list").empty().append($("<option>").text("All"));
     for (var i in nicknames) {
 	  $('#nicknames').append($('<b>').text(nicknames[i]));
+	  $("#user-list").append($("<option>").text(nicknames[i]));
     }
 });
 
@@ -65,7 +67,7 @@ $(function () {
 
     $('#send-message').submit(function () {
 	    message('me', $('#message').val());
-	    socket.emit('user message', $('#message').val());
+	    socket.emit('user message', $("#user-list").val(), $('#message').val());
 	    clear();
 	    $('#lines').get(0).scrollTop = 10000000;
 	    return false;
@@ -94,6 +96,7 @@ $(function () {
       <div id="lines"></div>
     </div>
     <form id="send-message">
+      <select id="user-list"></select>
       <input id="message">
       <button>Send</button>
     </form>

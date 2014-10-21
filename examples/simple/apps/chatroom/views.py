@@ -14,7 +14,7 @@ def test():
     return 'ok'
 
 class ChatNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
-    nicknames = []
+    nicknames = {}
 
     def initialize(self):
 #        self.logger = app.logger
@@ -30,10 +30,10 @@ class ChatNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 
     def on_nickname(self, nickname):
         self.log('Nickname: {0}'.format(nickname))
-        self.nicknames.append(nickname)
+        self.nicknames[nickname] = self.socket
         self.session['nickname'] = nickname
         self.broadcast_event('announcement', '%s has connected' % nickname)
-        self.broadcast_event('nicknames', self.nicknames)
+        self.broadcast_event('nicknames', self.nicknames.keys())
         self.room = 'main_room'
         self.join('main_room')
 
@@ -42,17 +42,29 @@ class ChatNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         self.log('Disconnected')
         nickname = self.session.get('nickname')
         if nickname:
-            self.nicknames.remove(nickname)
+            del self.nicknames[nickname]
         self.broadcast_event('announcement', '%s has disconnected' % nickname)
-        self.broadcast_event('nicknames', self.nicknames)
+        self.broadcast_event('nicknames', self.nicknames.keys())
         self.disconnect(silent=True)
         return True
 
-    def on_user_message(self, msg):
+    def on_user_message(self, nickname, msg):
         self.log('User message: {0}'.format(msg))
-        self.emit_to_room(self.room, 'msg_to_room',
-            self.session['nickname'], msg)
+        print nickname
+        if nickname == "All":   # 群聊
+            self.emit_to_room(self.room, 'msg_to_room',
+                              self.session['nickname'], msg)
+        else:                   # 私聊
+            pkt = dict(type="event",
+                       name="announcement",
+                       args=msg,
+                       endpoint=self.ns_name)
+        
+            client_sock = self.nicknames[nickname]
+            client_sock.send_packet(pkt)
+
         return True
+
 
 @expose('/socket.io/<path:path>')
 def socketio(path):

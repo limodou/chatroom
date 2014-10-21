@@ -120,13 +120,18 @@
   background: #fff;
   position: relative;
 }
+#send-message select {
+  height: 30px;
+  padding: 0 10px;
+  width: 100px;
+}
+
 #send-message input {
   border: none;
   height: 30px;
-  padding: 0 10px;
   line-height: 30px;
   vertical-align: middle;
-  width: 580px;
+  width: 480px;
 }
 #send-message input:focus {
   outline: 0;
